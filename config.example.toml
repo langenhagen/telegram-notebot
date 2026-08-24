@@ -1,0 +1,19 @@
+# Copy to config.toml and fill in your values.
+
+# File (outside this repo) that contains just the bot token on one line.
+# Store it wherever you like, e.g.:
+#   printf '%s\n' '123456:ABC-your-token' > /path/to/your/token-file
+token_file = "/path/to/your/token-file"
+
+[whisper]
+model = "large-v3"
+device = "cpu"                  # auto | cpu | cuda; see Troubleshooting for GPU notes
+compute_type = "int8"           # int8_float16 is GPU-only
+
+[channels]
+# Telegram channel ID -> markdown file for this channel's notes; audio uploads
+# are archived next to it. Relative paths resolve against the working
+# directory; ~ is expanded.
+# Post anything into a channel while the bot runs to see unmapped IDs in the log.
+"-1001234567890" = "~/Notes/telegram/kochbuch.md"
+"-1009876543210" = "/home/me/Documents/meeting-notes/protocol.md"
