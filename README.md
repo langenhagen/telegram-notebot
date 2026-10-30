@@ -34,6 +34,7 @@ Edit `config.toml`:
 1. Point `token_file` at that file's path.
 2. Map your channels under `[channels]`: Telegram chat ID -> markdown file
    for its notes (absolute, `~/...`, or relative to the working directory).
+   Missing folders on that path are created.
 
 ### Finding the Channel ID
 

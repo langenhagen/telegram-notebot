@@ -14,6 +14,7 @@ compute_type = "int8"           # int8_float16 is GPU-only
 # Telegram channel ID -> markdown file for this channel's notes; audio uploads
 # are archived next to it. Relative paths resolve against the working
 # directory; ~ is expanded.
+# Missing directory trees are created.
 # Post anything into a channel while the bot runs to see unmapped IDs in the log.
 "-1001234567890" = "~/Notes/telegram/kochbuch.md"
 "-1009876543210" = "/home/me/Documents/meeting-notes/protocol.md"
