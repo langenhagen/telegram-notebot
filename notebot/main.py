@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from telegram import Audio, Bot, Message, Update, Voice
 
-from notebot.config import Config, load_config
+from notebot.config import Channel, Config, load_config
 from notebot.store import (
     append_note,
     download_failure_note,
@@ -51,10 +51,11 @@ def _note_time(message: Message) -> datetime:
 
 async def _handle_audio(
     transcriber: Transcriber,
-    note_file: Path,
+    channel: Channel,
     message: Message,
     attachment: Voice | Audio,
 ) -> None:
+    note_file = channel.note_file
     now = _note_time(message)
     suffix = ".ogg"
     file_name = getattr(attachment, "file_name", None)
@@ -72,6 +73,7 @@ async def _handle_audio(
         append_note(
             note_file,
             download_failure_note(target.name),
+            channel.template,
             now=now,
         )
         return
@@ -86,12 +88,13 @@ async def _handle_audio(
         append_note(
             note_file,
             transcription_failure_note(target.name),
+            channel.template,
             now=now,
         )
         logger.warning("[%s] no transcript for %s", note_file.stem, target.name)
         return
 
-    append_note(note_file, transcript, now=now)
+    append_note(note_file, transcript, channel.template, now=now)
     logger.info("[%s] stored transcript (%d chars)", note_file.stem, len(transcript))
 
 
@@ -106,16 +109,21 @@ async def process_update(
     if message is None or chat is None:
         return
 
-    note_file = config.channels.get(chat.id)
-    if note_file is None:
+    channel = config.channels.get(chat.id)
+    if channel is None:
         logger.info("Ignoring unmapped chat id=%s title=%r", chat.id, chat.title)
         return
 
     if message.text:
-        append_note(note_file, message.text, now=_note_time(message))
+        append_note(
+            channel.note_file,
+            message.text,
+            channel.template,
+            now=_note_time(message),
+        )
         logger.info(
             "[%s] stored text note (%d chars)",
-            note_file.stem,
+            channel.note_file.stem,
             len(message.text),
         )
         return
@@ -124,7 +132,7 @@ async def process_update(
     if attachment is None:
         return
 
-    await _handle_audio(transcriber, note_file, message, attachment)
+    await _handle_audio(transcriber, channel, message, attachment)
 
 
 async def drain(config: Config, transcriber: Transcriber) -> None:
@@ -163,7 +171,7 @@ def main() -> None:
     logger.info(
         "Draining pending posts for %d channel(s): %s",
         len(config.channels),
-        sorted(config.channels.values()),
+        sorted(channel.note_file for channel in config.channels.values()),
     )
     asyncio.run(drain(config, transcriber))
     logger.info("Done")

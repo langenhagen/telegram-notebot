@@ -33,9 +33,11 @@ chmod 600 /path/to/your/token-file
 Edit `config.toml`:
 
 1. Point `token_file` at that file's path.
-2. Map your channels under `[channels]`: Telegram chat ID -> markdown file
-   for its notes (absolute, `~/...`, or relative to the working directory).
-   Missing folders on that path are created.
+2. Map your channels under `[channels]`: Telegram chat ID ->
+   `{ file = "...", template = "..." }`, where `file` is the markdown file for
+   its notes and `template` the file that formats each note block, e.g.
+   `message_templates/default.tpl`. Paths are absolute, `~/...`, or relative
+   to the working directory. Missing folders on the `file` path are created.
 
 ### Finding the Channel ID
 
@@ -100,9 +102,8 @@ A note block looks like:
 ```markdown
 ## 2026-08-24 14:03:22
 
-Der gesprochene Text oder die Nachricht...
+The spoken text or the or the typed message...
 
----
 ```
 
 If an upload cannot be downloaded, or transcription fails or produces no
@@ -113,18 +114,22 @@ text, a marker entry referencing the (intended) audio file name is appended:
 
 **failed transcription of audiofile 2026-08-24-14-03-22-journal.ogg**
 
----
 ```
+
+Note blocks are formatted by the channel's `template` file. A template is a
+Python format string with the placeholders `{timestamp}` and `{text}`;
+`{timestamp:%Y-%m-%d %H:%M:%S}` picks the date format. Existing notes keep
+their old format.
 
 ## Configuration Reference
 
-| Key                    | Default        | Meaning                                 |
-|------------------------|----------------|-----------------------------------------|
-| `token_file`           | required       | File holding the bot token (one line)   |
-| `whisper.model`        | `large-v3`     | Any faster-whisper model name           |
-| `whisper.device`       | `auto`         | `auto`, `cpu`, or `cuda`                |
-| `whisper.compute_type` | `int8_float16` | Quantized; GPU-only. Use `int8` on CPU  |
-| `channels`             | required       | Map of channel ID -> markdown note file |
+| Key                    | Default        | Meaning                                   |
+|------------------------|----------------|-------------------------------------------|
+| `token_file`           | required       | File holding the bot token (one line)     |
+| `whisper.model`        | `large-v3`     | Any faster-whisper model name             |
+| `whisper.device`       | `auto`         | `auto`, `cpu`, or `cuda`                  |
+| `whisper.compute_type` | `int8_float16` | Quantized; GPU-only. Use `int8` on CPU    |
+| `channels`             | required       | Map of channel ID -> `{ file, template }` |
 
 ## Troubleshooting
 

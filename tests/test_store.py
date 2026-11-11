@@ -10,16 +10,18 @@ from notebot.store import (
     transcription_failure_note,
 )
 
+TEMPLATE = "## {timestamp:%Y-%m-%d %H:%M:%S}\n\n{text}\n\n"
+
 
 def test_append_note_creates_markdown_block(tmp_path: Path) -> None:
     """A note appends one timestamped markdown block into the channel file."""
     now = datetime(2026, 8, 24, 14, 3)
 
-    path = append_note(tmp_path / "recipes.md", "Simmer 20 minutes.", now=now)
+    path = append_note(tmp_path / "recipes.md", "Simmer 20 minutes.", TEMPLATE, now=now)
 
     assert path == tmp_path / "recipes.md"
     assert path.read_text(encoding="utf-8") == (
-        "## 2026-08-24 14:03:00\n\nSimmer 20 minutes.\n\n---\n\n"
+        "## 2026-08-24 14:03:00\n\nSimmer 20 minutes.\n\n"
     )
 
 
@@ -28,18 +30,20 @@ def test_append_note_decouples_file_from_folder(tmp_path: Path) -> None:
     first = append_note(
         tmp_path / "Meeting Notes" / "journal.md",
         "Agenda sent.",
+        TEMPLATE,
         now=datetime(2026, 8, 24, 9, 0),
     )
     second = append_note(
         tmp_path / "Meeting Notes" / "journal.md",
         "Follow-up done.",
+        TEMPLATE,
         now=datetime(2026, 8, 24, 15, 30),
     )
 
     assert first == second == tmp_path / "Meeting Notes" / "journal.md"
     assert second.read_text(encoding="utf-8") == (
-        "## 2026-08-24 09:00:00\n\nAgenda sent.\n\n---\n\n"
-        "## 2026-08-24 15:30:00\n\nFollow-up done.\n\n---\n\n"
+        "## 2026-08-24 09:00:00\n\nAgenda sent.\n\n"
+        "## 2026-08-24 15:30:00\n\nFollow-up done.\n\n"
     )
 
 
@@ -48,11 +52,12 @@ def test_append_note_keeps_multiline_body(tmp_path: Path) -> None:
     path = append_note(
         tmp_path / "ideas.md",
         "line one\nline two",
+        TEMPLATE,
         now=datetime(2026, 1, 1, 0, 0),
     )
 
     assert path.read_text(encoding="utf-8") == (
-        "## 2026-01-01 00:00:00\n\nline one\nline two\n\n---\n\n"
+        "## 2026-01-01 00:00:00\n\nline one\nline two\n\n"
     )
 
 
