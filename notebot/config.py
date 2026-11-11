@@ -111,28 +111,29 @@ def load_config(path: Path) -> Config:
                 f'{path}: channel {chat_id}: expected a [channels."{chat_id}"]'
                 f" section with file, template, and keep_audio, got {channel_value!r}",
             )
-        file_value = channel_value.get("file")
-        template_value = channel_value.get("template")
+        for key in ("file", "template", "keep_audio"):
+            if key not in channel_value:
+                raise ValueError(
+                    f"{path}: channel {chat_id}: missing required key {key!r}",
+                )
+        file_value = channel_value["file"]
+        template_value = channel_value["template"]
+        keep_audio = channel_value["keep_audio"]
         if not isinstance(file_value, str) or not file_value.strip():
             raise ValueError(
-                f"{path}: channel {chat_id}: markdown file"
-                f" must be a non-empty string, got {file_value!r}",
+                f"{path}: channel {chat_id}: 'file' must be a non-empty string,"
+                f" got {file_value!r}",
             )
         note_file = Path(file_value).expanduser()
         if not note_file.stem:
             raise ValueError(
-                f"{path}: channel {chat_id}: invalid markdown file {file_value!r}",
+                f"{path}: channel {chat_id}: 'file' {file_value!r} has no file name",
             )
         if not isinstance(template_value, str) or not template_value.strip():
             raise ValueError(
-                f"{path}: channel {chat_id}: template file"
-                f" must be a non-empty string, got {template_value!r}",
+                f"{path}: channel {chat_id}: 'template' must be a non-empty string,"
+                f" got {template_value!r}",
             )
-        if "keep_audio" not in channel_value:
-            raise ValueError(
-                f"{path}: channel {chat_id}: missing required key 'keep_audio'",
-            )
-        keep_audio = channel_value["keep_audio"]
         if not isinstance(keep_audio, bool):
             raise TypeError(
                 f"{path}: channel {chat_id}: keep_audio must be True or False,"

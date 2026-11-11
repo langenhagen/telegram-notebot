@@ -112,10 +112,10 @@ def test_empty_channel_file_raises(tmp_path: Path) -> None:
         config_path = write_config(
             tmp_path,
             token_ref,
-            f'{{ file = "{dir_value}", template = "default.tpl" }}',
+            f'{{ file = "{dir_value}", template = "default.tpl", keep_audio = false }}',
         )
 
-        with pytest.raises(ValueError, match="markdown file"):
+        with pytest.raises(ValueError, match="'file'"):
             load_config(config_path)
 
 
@@ -127,15 +127,16 @@ def test_plain_path_channel_raises(tmp_path: Path) -> None:
         load_config(config)
 
 
-def test_missing_template_key_raises(tmp_path: Path) -> None:
-    """A channel table without a template fails loudly."""
-    config = write_config(
-        tmp_path,
-        write_token(tmp_path),
-        '{ file = "notes/recipes.md" }',
-    )
+@pytest.mark.parametrize("key", ["file", "template"])
+def test_missing_channel_key_raises(tmp_path: Path, key: str) -> None:
+    """A channel section without file or template names the missing key."""
+    keys = {"file": '"notes/recipes.md"', "template": '"default.tpl"'}
+    del keys[key]
+    channel = "{ " + ", ".join(f"{k} = {v}" for k, v in keys.items())
+    channel += ", keep_audio = false }"
+    config = write_config(tmp_path, write_token(tmp_path), channel)
 
-    with pytest.raises(ValueError, match="template file"):
+    with pytest.raises(ValueError, match=f"missing required key '{key}'"):
         load_config(config)
 
 
