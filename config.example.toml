@@ -7,15 +7,26 @@ token_file = "/path/to/your/token-file"
 
 [whisper]
 model = "large-v3"
-device = "cpu"                  # auto | cpu | cuda; see Troubleshooting for GPU notes
-compute_type = "int8"           # int8_float16 is GPU-only
+device = "cpu"          # auto | cpu | cuda; see Troubleshooting for GPU notes
+compute_type = "int8"   # int8_float16 is GPU-only
 
 [channels]
-# Telegram channel ID -> { file, template }.
-# `file` is the markdown file for this channel's notes; audio uploads are
-# archived next to it. Missing directory trees are created.
-# `template` is the file that formats each note block; see message_templates/.
+# One [channels."<Telegram channel ID>"] section per channel, with:
+# `file`: the markdown file for this channel's notes. Missing directory trees are created.
+# `template`: the file that formats each note block; see message_templates/ folder.
+# `keep_audio`:
+#   - true archives audio uploads next to `file`.
+#   - false deletes an upload once it is transcribed (failed ones are kept).
+#
 # Relative paths resolve against the working directory; ~ is expanded.
 # Post anything into a channel while the bot runs to see unmapped IDs in the log.
-"-1001234567890" = { file = "~/Notes/telegram/cookbook.md", template = "message_templates/default.tpl" }
-"-1009876543210" = { file = "/home/me/Documents/meeting-notes/protocol.md", template = "~/Notes/meeting.tpl" }
+
+[channels."-1001234567890"]
+file = "~/Notes/telegram/cookbook.md"
+template = "message_templates/default.tpl"
+keep_audio = true
+
+[channels."-1009876543210"]
+file = "/home/me/Documents/meeting-notes/protocol.md"
+template = "~/Notes/meeting.tpl"
+keep_audio = false

@@ -7,7 +7,8 @@ detection) before storing.
 
 Notes are organized per channel: each monitored channel maps to its own
 markdown file under `[channels]`, and every post is appended there; audio
-uploads are archived next to that file.
+uploads are archived next to that file. With `keep_audio = false`, a channel
+keeps only the uploads that fail transcription.
 
 ## Requirements
 
@@ -33,11 +34,17 @@ chmod 600 /path/to/your/token-file
 Edit `config.toml`:
 
 1. Point `token_file` at that file's path.
-2. Map your channels under `[channels]`: Telegram chat ID ->
-   `{ file = "...", template = "..." }`, where `file` is the markdown file for
-   its notes and `template` the file that formats each note block, e.g.
-   `message_templates/default.tpl`. Paths are absolute, `~/...`, or relative
-   to the working directory. Missing folders on the `file` path are created.
+2. Add one section per channel, named after its Telegram chat ID:
+
+   ```toml
+   [channels."-1001234567890"]
+   file = "~/Notes/telegram/cookbook.md"       # markdown file for its notes
+   template = "message_templates/default.tpl"  # formats each note block
+   keep_audio = true                           # keep audio after transcription
+   ```
+
+   Paths are absolute, `~/...`, or relative to the working directory. Missing
+   folders on the `file` path are created.
 
 ### Finding the Channel ID
 
@@ -55,8 +62,9 @@ invite link (`t.me/+AbCdEf...`) is not the ID. Any of these works:
    ```text
    Ignoring unmapped chat id=-1001234567890 title='My Channel'
    ```
-4. Copy the `-100...` number into `[channels]` and run the bot again. In case
-   nothing came through, you might have to repeat steps 2 and 3.
+4. Add a `[channels."-100..."]` section with that number (see Setup) and run
+   the bot again. In case nothing came through, you might have to repeat
+   steps 2 and 3.
 
 **Forward to an ID bot**: forward any post from the channel to
   [@getidsbot](https://t.me/getidsbot) or
@@ -95,14 +103,15 @@ instead.
 
 Each channel's `[channels]` entry names its markdown file: that file
 collects the note blocks, and original uploads are archived next to it as
-`YYYY-MM-DD-HH-MM-SS-<file-stem>.<ext>`.
+`YYYY-MM-DD-HH-MM-SS-<file-stem>.<ext>`. With `keep_audio = false`, an upload
+is deleted once it is transcribed; uploads that fail transcription are kept.
 
-A note block looks like:
+With `message_templates/default.tpl`, a note block looks like:
 
 ```markdown
 ## 2026-08-24 14:03:22
 
-The spoken text or the or the typed message...
+The spoken text or the typed message...
 
 ```
 
@@ -123,13 +132,15 @@ their old format.
 
 ## Configuration Reference
 
-| Key                    | Default        | Meaning                                   |
-|------------------------|----------------|-------------------------------------------|
-| `token_file`           | required       | File holding the bot token (one line)     |
-| `whisper.model`        | `large-v3`     | Any faster-whisper model name             |
-| `whisper.device`       | `auto`         | `auto`, `cpu`, or `cuda`                  |
-| `whisper.compute_type` | `int8_float16` | Quantized; GPU-only. Use `int8` on CPU    |
-| `channels`             | required       | Map of channel ID -> `{ file, template }` |
+Every key is required; there are no defaults.
+
+| Key                    | Meaning                                                   |
+|------------------------|-----------------------------------------------------------|
+| `token_file`           | File holding the bot token (one line)                     |
+| `whisper.model`        | Any faster-whisper model name, e.g. `large-v3`            |
+| `whisper.device`       | `auto`, `cpu`, or `cuda`                                  |
+| `whisper.compute_type` | e.g. `int8` on CPU; `int8_float16` is GPU-only            |
+| `channels."<id>"`      | One section per channel: `file`, `template`, `keep_audio` |
 
 ## Troubleshooting
 

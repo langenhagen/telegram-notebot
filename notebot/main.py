@@ -97,6 +97,12 @@ async def _handle_audio(
     append_note(note_file, transcript, channel.template, now=now)
     logger.info("[%s] stored transcript (%d chars)", note_file.stem, len(transcript))
 
+    # Only a transcribed upload is deleted; failure markers name a file that
+    # must still exist.
+    if not channel.keep_audio:
+        target.unlink()
+        logger.info("[%s] deleted %s (keep_audio = false)", note_file.stem, target.name)
+
 
 async def process_update(
     config: Config,

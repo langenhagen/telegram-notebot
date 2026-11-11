@@ -13,11 +13,13 @@ class Channel:
     """Where one channel's notes go and how each note block looks.
 
     ``template`` is the content of the channel's template file; see
-    ``notebot.store.append_note`` for its placeholders.
+    ``notebot.store.append_note`` for its placeholders. ``keep_audio`` keeps
+    archived audio after a successful transcription.
     """
 
     note_file: Path
     template: str
+    keep_audio: bool
 
 
 @dataclass(frozen=True)
@@ -33,7 +35,8 @@ class WhisperConfig:
 class Config:
     """Fully resolved runtime configuration.
 
-    ``channels`` maps a chat ID to its markdown file and note template.
+    ``channels`` maps a chat ID to its markdown file, note template, and
+    audio setting.
     """
 
     bot_token: str
@@ -68,8 +71,19 @@ def load_config(path: Path) -> Config:
     try:
         token_file = raw["token_file"]
         channels_raw = raw["channels"]
+        whisper_raw = raw["whisper"]
     except KeyError as exc:
         raise ValueError(f"{path}: missing required key {exc.args[0]!r}") from exc
+    try:
+        whisper = WhisperConfig(
+            model=whisper_raw["model"],
+            device=whisper_raw["device"],
+            compute_type=whisper_raw["compute_type"],
+        )
+    except KeyError as exc:
+        raise ValueError(
+            f"{path}: missing required key 'whisper.{exc.args[0]}'",
+        ) from exc
 
     token_path = Path(str(token_file)).expanduser()
     try:
@@ -84,8 +98,8 @@ def load_config(path: Path) -> Config:
         chat_id = int(chat_id_raw)
         if not isinstance(channel_value, dict):
             raise TypeError(
-                f"{path}: channel {chat_id}: expected"
-                f' {{ file = "...", template = "..." }}, got {channel_value!r}',
+                f'{path}: channel {chat_id}: expected a [channels."{chat_id}"]'
+                f" section with file, template, and keep_audio, got {channel_value!r}",
             )
         file_value = channel_value.get("file")
         template_value = channel_value.get("template")
@@ -104,18 +118,24 @@ def load_config(path: Path) -> Config:
                 f"{path}: channel {chat_id}: template file"
                 f" must be a non-empty string, got {template_value!r}",
             )
+        if "keep_audio" not in channel_value:
+            raise ValueError(
+                f"{path}: channel {chat_id}: missing required key 'keep_audio'",
+            )
+        keep_audio = channel_value["keep_audio"]
+        if not isinstance(keep_audio, bool):
+            raise TypeError(
+                f"{path}: channel {chat_id}: keep_audio must be True or False,"
+                f" got {keep_audio!r}",
+            )
         channels[chat_id] = Channel(
             note_file=note_file,
             template=_load_template(path, chat_id, template_value),
+            keep_audio=keep_audio,
         )
 
-    whisper_raw = raw.get("whisper", {})
     return Config(
         bot_token=bot_token,
         channels=channels,
-        whisper=WhisperConfig(
-            model=whisper_raw.get("model", "large-v3"),
-            device=whisper_raw.get("device", "auto"),
-            compute_type=whisper_raw.get("compute_type", "int8_float16"),
-        ),
+        whisper=whisper,
     )
