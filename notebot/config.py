@@ -83,9 +83,7 @@ def load_config(path: Path) -> Config:
     for chat_id_raw, channel_value in channels_raw.items():
         chat_id = int(chat_id_raw)
         if not isinstance(channel_value, dict):
-            # TRY004 wants TypeError for type checks; every config error here is
-            # a ValueError so callers catch one type.
-            raise ValueError(  # noqa: TRY004
+            raise TypeError(
                 f"{path}: channel {chat_id}: expected"
                 f' {{ file = "...", template = "..." }}, got {channel_value!r}',
             )

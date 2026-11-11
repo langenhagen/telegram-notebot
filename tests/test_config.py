@@ -65,7 +65,7 @@ def test_plain_path_channel_raises(tmp_path: Path) -> None:
     """A channel given as a bare path, without a template, fails loudly."""
     config = write_config(tmp_path, write_token(tmp_path), '"notes/recipes.md"')
 
-    with pytest.raises(ValueError, match="expected"):
+    with pytest.raises(TypeError, match="expected"):
         load_config(config)
 
 
