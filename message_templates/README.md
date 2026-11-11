@@ -10,4 +10,4 @@ Each `.tpl` file formats the note blocks of every channel whose `template` in
 - `{text}`: the note body.
 
 Write literal braces as `{{` and `}}`. The bot checks every template at
-startup and stops on an unknown placeholder.
+startup and stops if `{text}` is missing or a placeholder is unknown.

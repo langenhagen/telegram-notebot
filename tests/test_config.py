@@ -167,6 +167,37 @@ def test_unknown_template_placeholder_raises(tmp_path: Path) -> None:
         load_config(config)
 
 
+def test_template_without_text_raises(tmp_path: Path) -> None:
+    """A template that would drop every note body fails at load time."""
+    template_file = tmp_path / "no-text.tpl"
+    template_file.write_text("## {timestamp:%Y-%m-%d}\n", encoding="utf-8")
+    config = write_config(
+        tmp_path,
+        write_token(tmp_path),
+        f'{{ file = "notes/recipes.md", template = "{template_file}",'
+        " keep_audio = false }",
+    )
+
+    with pytest.raises(ValueError, match="no {text} placeholder"):
+        load_config(config)
+
+
+@pytest.mark.parametrize("placeholder", ["{text.foo}", "{timestamp[0]}"])
+def test_bad_placeholder_access_raises(tmp_path: Path, placeholder: str) -> None:
+    """Attribute or index access that fails is reported as an invalid template."""
+    template_file = tmp_path / "bad.tpl"
+    template_file.write_text(f"{placeholder} {{text}}\n", encoding="utf-8")
+    config = write_config(
+        tmp_path,
+        write_token(tmp_path),
+        f'{{ file = "notes/recipes.md", template = "{template_file}",'
+        " keep_audio = false }",
+    )
+
+    with pytest.raises(ValueError, match="invalid template"):
+        load_config(config)
+
+
 def test_missing_token_file_key_raises(tmp_path: Path) -> None:
     """Missing token_file key fails loudly."""
     config_path = tmp_path / "config.toml"

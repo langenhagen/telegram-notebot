@@ -6,6 +6,7 @@ import tomllib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from string import Formatter
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,11 @@ class Config:
 
 
 def _load_template(config_path: Path, chat_id: int, template_value: str) -> str:
-    """Read a template file and check its placeholders once, up front."""
+    """Read a template file and check its placeholders once, up front.
+
+    The template must contain ``{text}``; without it every note body would be
+    dropped silently.
+    """
     template_path = Path(template_value).expanduser()
     try:
         template = template_path.read_text(encoding="utf-8")
@@ -56,11 +61,16 @@ def _load_template(config_path: Path, chat_id: int, template_value: str) -> str:
         ) from exc
     try:
         template.format(timestamp=datetime.now(tz=UTC), text="")
-    except (KeyError, IndexError, ValueError) as exc:
+    except (AttributeError, IndexError, KeyError, TypeError, ValueError) as exc:
         raise ValueError(
             f"{config_path}: channel {chat_id}: invalid template"
             f" {template_path}: {exc!r}",
         ) from exc
+    if "text" not in {field for _, field, _, _ in Formatter().parse(template)}:
+        raise ValueError(
+            f"{config_path}: channel {chat_id}: template {template_path}"
+            " has no {text} placeholder",
+        )
     return template
 
 
