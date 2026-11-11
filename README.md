@@ -14,6 +14,7 @@ uploads are archived next to that file.
 - Python 3.13 (managed via [uv](https://docs.astral.sh/uv/))
 - A Telegram bot token (create a bot with [@BotFather](https://t.me/BotFather))
 - The bot added as an **admin** to every private channel you want to monitor
+  - The bot should be able to "Manage Direct Messages"
 
 ## Setup
 
@@ -41,27 +42,26 @@ Edit `config.toml`:
 Private channels never show their numeric ID in any Telegram app, and an
 invite link (`t.me/+AbCdEf...`) is not the ID. Any of these works:
 
-- **Bot log (recommended)**:
+**Bot log (recommended)**:
 
-1. Add the bot as an admin to the channel, then post anything. Unmapped channels are logged as:
-  ```text
-  Ignoring unmapped chat id=-1001234567890 title='My Channel'
-  ```
-2. Post any message into the channel
-2. Then run `uv run notebot`
-3. You'll see `Ignoring unmapped chat id=-100... title='...'` - copy that ID into [channels], run once
-   more. In case nothing came through, you might have to repeat steps 2 and 3.
+1. Add the bot as an admin to the channel. It should be able to
+   "Manage Direct Messages".
+2. Post any message into the channel.
+3. Then run `uv run notebot`.
 
-  Copy the `-100...` number into `[channels]` and run the bot again. No
-  third-party tools needed.
-- **Forward to an ID bot**: forward any post from the channel to
+   Unmapped channels are logged as:
+   ```text
+   Ignoring unmapped chat id=-1001234567890 title='My Channel'
+   ```
+4. Copy the `-100...` number into `[channels]` and run the bot again. In case
+   nothing came through, you might have to repeat steps 2 and 3.
+
+**Forward to an ID bot**: forward any post from the channel to
   [@getidsbot](https://t.me/getidsbot) or
   [@userinfobot](https://t.me/userinfobot); it replies with the origin chat ID.
-- **Telegram Web**: open the channel at web.telegram.org; the URL fragment
-  contains the internal ID, e.g. `#-1001234567890`.
 
-Use the exact `-100` + digits form shown by the bot log when filling
-`[channels]`; copying from there avoids conversion mistakes.
+**Telegram Web**: open the channel at https://web.telegram.org; the URL fragment
+  contains the internal ID, e.g. `#-1001234567890`.
 
 ## Run
 
