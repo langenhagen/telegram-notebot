@@ -1,1 +1,1 @@
-{timestamp:%a, %Y-%m-%d %H:%M:%S}  {text}
+{timestamp:%a, %Y-%m-%d %H:%M:%S}  {text}  
